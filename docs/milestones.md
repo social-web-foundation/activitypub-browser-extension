@@ -8,6 +8,7 @@
 4. Like object on current page
 5. Undo like object on current page
 6. Log out of Mastodon server
+7. Use extension in Chromium-compatible browser
 
 ## 1.1
 
