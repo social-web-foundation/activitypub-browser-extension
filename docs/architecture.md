@@ -165,13 +165,21 @@ sequenceDiagram
     participant Security as Security Store
     participant Mastodon as Mastodon Server
 
+    Note over Observer: Precondition: current account identity exists
     User->>Browser: Change current tab document or location
     Browser->>Observer: Notify document or location changed
     Observer->>Observer: Clear current ActivityPub resource
+    Observer->>Observer: Clear current status ID
     Observer->>Cache: Get ActivityPub resource for document
     Cache-->>Observer: ActivityPub resource or none
 
     alt Resource is cached
+        Observer->>Security: Get account credentials
+        Security-->>Observer: Account credentials
+        Observer->>Mastodon: Resolve ActivityPub resource to status ID
+        Mastodon-->>Observer: Status ID or none
+        Observer->>Observer: Set current status ID
+
         Observer->>Observer: Set current ActivityPub resource
     else Resource is not cached
         Observer->>Browser: Get response headers
@@ -225,26 +233,20 @@ sequenceDiagram
             alt Same-origin verification succeeds
                 Observer->>Observer: Mark resource verified
             else Same-origin verification does not succeed
-                Observer->>Security: Get current account identity
-                Security-->>Observer: Current account identity or none
+                Observer->>Security: Get account credentials
+                Security-->>Observer: Account credentials
 
-                alt Current account identity exists
-                    Observer->>Security: Get access token for account identity
-                    Security-->>Observer: Access token
-                    Observer->>Mastodon: Resolve ActivityPub resource with access token
-                    Mastodon-->>Observer: ActivityPub object or none
+                Observer->>Mastodon: Resolve ActivityPub resource with access token
+                Mastodon-->>Observer: ActivityPub object or none
 
-                    alt ActivityPub object returned
-                        Observer->>Observer: Verify object url matches current page
-                        alt Object url matches current page
-                            Observer->>Observer: Mark resource verified
-                        else Object url does not match current page
-                            Observer->>Observer: Mark resource not verified
-                        end
-                    else No ActivityPub object returned
+                alt ActivityPub object returned
+                    Observer->>Observer: Verify object url matches current page
+                    alt Object url matches current page
+                        Observer->>Observer: Mark resource verified
+                    else Object url does not match current page
                         Observer->>Observer: Mark resource not verified
                     end
-                else No current account identity
+                else No ActivityPub object returned
                     Observer->>Observer: Mark resource not verified
                 end
             end
@@ -253,11 +255,19 @@ sequenceDiagram
         end
 
         alt Resource is verified
+            Observer->>Security: Get account credentials
+            Security-->>Observer: Account credentials
+
+            Observer->>Mastodon: Resolve ActivityPub resource to status ID
+            Mastodon-->>Observer: Status ID or none
+            Observer->>Observer: Set current status ID
+
             Observer->>Cache: Store ActivityPub resource for document
             Note over Observer,Cache: Cache invalidation TBD
             Observer->>Observer: Set current ActivityPub resource
         else Resource is not verified
             Observer->>Observer: Clear current ActivityPub resource
+            Observer->>Observer: Clear current status ID
         end
     end
 ```
@@ -267,40 +277,68 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Observer as Discovery Observer
-    participant Indicator as Liked Indicator
+    participant Toggle as Like Toggle
     participant Security as Security Store
     participant Mastodon as Mastodon Server
 
-    Observer->>Indicator: Notify current ActivityPub resource changed
+    Note over Toggle: Precondition: current account identity exists
+    Observer->>Toggle: Notify current ActivityPub resource changed
 
-    alt Current ActivityPub resource exists
-        Indicator->>Security: Get current account identity
-        Security-->>Indicator: Current account identity or none
+    Toggle->>Observer: Get current status ID
+    Observer-->>Toggle: Current status ID or none
 
-        alt Current account identity exists
-            Indicator->>Security: Get access token for account identity
-            Security-->>Indicator: Access token
-            Indicator->>Mastodon: Resolve ActivityPub resource to status ID
-            Mastodon-->>Indicator: Status ID or none
-
-            alt Status ID exists
-                Indicator->>Mastodon: Get liked state for status ID
-                Mastodon-->>Indicator: Liked state
-                Indicator->>Indicator: Set liked state
-            else No status ID exists
-                Indicator->>Indicator: Clear liked state
-            end
-        else No current account identity
-            Indicator->>Indicator: Clear liked state
-        end
-    else No current ActivityPub resource
-        Indicator->>Indicator: Clear liked state
+    alt Current status ID exists
+        Toggle->>Security: Get account credentials
+        Security-->>Toggle: Account credentials
+        Toggle->>Mastodon: Get liked state for current status ID
+        Mastodon-->>Toggle: Liked state
+        Toggle->>Toggle: Set liked state
+    else No current status ID
+        Toggle->>Toggle: Clear liked state
     end
 ```
 
 ### Like Object On Current Page
 
+```mermaid
+sequenceDiagram
+    actor User as Mastodon User
+    participant Toggle as Like Toggle
+    participant Observer as Discovery Observer
+    participant Security as Security Store
+    participant Mastodon as Mastodon Server
+
+    Note over Toggle: Preconditions: liked state == false, current account identity exists, current status ID exists
+    User->>Toggle: Initiate like
+    Toggle->>Observer: Get current status ID
+    Observer-->>Toggle: Current status ID
+    Toggle->>Security: Get account credentials
+    Security-->>Toggle: Account credentials
+    Toggle->>Mastodon: Like current status ID
+    Mastodon-->>Toggle: Liked state
+    Toggle->>Toggle: Set liked state
+```
+
 ### Undo Like Object On Current Page
+
+```mermaid
+sequenceDiagram
+    actor User as Mastodon User
+    participant Toggle as Like Toggle
+    participant Observer as Discovery Observer
+    participant Security as Security Store
+    participant Mastodon as Mastodon Server
+
+    Note over Toggle: Preconditions: liked state == true, current account identity exists, current status ID exists
+    User->>Toggle: Initiate undo like
+    Toggle->>Observer: Get current status ID
+    Observer-->>Toggle: Current status ID
+    Toggle->>Security: Get account credentials
+    Security-->>Toggle: Account credentials
+    Toggle->>Mastodon: Undo like for current status ID
+    Mastodon-->>Toggle: Liked state
+    Toggle->>Toggle: Set liked state
+```
 
 ### Log Out Of Mastodon Server
 
