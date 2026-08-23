@@ -91,9 +91,93 @@ flowchart LR
     logoutMastodon -. requires .-> loginMastodon
 ```
 
-## Logical View
-
 ## Process View
+
+### Log Into Mastodon Server
+
+```mermaid
+sequenceDiagram
+    actor User as Mastodon User
+    participant Login as Login Component
+    participant Security as Security Store
+    participant Mastodon as Mastodon Server
+
+    User->>Login: Press login button
+    Login-->>User: Show login modal with server name input
+
+    alt User cancels
+        User->>Login: Cancel login
+        Login-->>User: Close login modal
+    else User submits server name
+        User->>Login: Submit server name
+        Login->>Security: Get client credentials for server name
+        Security-->>Login: Client credentials or none
+
+        alt No client credentials exist
+            Login->>Mastodon: Register client application
+            Mastodon-->>Login: Client credentials
+            Login->>Security: Store client credentials for server name
+        else Client credentials exist
+            Login-->>Login: Use stored client credentials
+        end
+
+        Login-->>User: Redirect to OAuth 2 authorization endpoint with client credentials
+        User->>Mastodon: Request authorization endpoint
+
+        alt User is not logged in to Mastodon
+            Mastodon-->>User: Redirect to login page
+            User->>Mastodon: Log in
+            Mastodon-->>User: Show authorization prompt
+        else User is already logged in to Mastodon
+            Mastodon-->>User: Show authorization prompt
+        end
+
+        alt User cancels authorization
+            User->>Mastodon: Cancel authorization
+            Mastodon-->>User: Redirect without authorization code
+            User->>Login: Request redirect URI without authorization code
+            Login-->>User: Show login canceled state
+        else User authorizes extension
+            User->>Mastodon: Authorize extension
+            Mastodon-->>User: Redirect with authorization code
+            User->>Login: Request redirect URI with authorization code
+            Note over User,Login: Redirect handling mechanism TBD
+            Login->>Mastodon: Exchange authorization code for access token
+            Mastodon-->>Login: Access token
+            Login->>Mastodon: Verify credentials with access token
+            Mastodon-->>Login: Account identity
+            Login->>Security: Store access token for account identity
+            Login->>Security: Set current account identity
+            Login-->>User: Show logged-in state
+        end
+    end
+```
+
+### Discover ActivityPub Resource On Current Page
+
+### See Whether I Already Liked Object On Current Page
+
+### Like Object On Current Page
+
+### Undo Like Object On Current Page
+
+### Log Out Of Mastodon Server
+
+```mermaid
+sequenceDiagram
+    actor User as Mastodon User
+    participant Logout as Logout Component
+    participant Security as Security Store
+
+    User->>Logout: Initiate logout
+    Logout->>Security: Get current account identity
+    Security-->>Logout: Current account identity
+    Logout->>Security: Remove access token for account identity
+    Logout->>Security: Remove current account identity
+    Logout-->>User: Show logged-out state
+```
+
+## Logical View
 
 ## Development View
 
