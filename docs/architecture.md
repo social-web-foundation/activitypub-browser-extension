@@ -236,11 +236,16 @@ sequenceDiagram
 
                     alt ActivityPub object returned
                         Observer->>Observer: Verify object url matches current page
+                        alt Object url matches current page
+                            Observer->>Observer: Mark resource verified
+                        else Object url does not match current page
+                            Observer->>Observer: Mark resource not verified
+                        end
                     else No ActivityPub object returned
                         Observer->>Observer: Mark resource not verified
                     end
                 else No current account identity
-                    Observer->>Observer: Skip two-way verification
+                    Observer->>Observer: Mark resource not verified
                 end
             end
         else No ActivityPub resource found
@@ -258,6 +263,40 @@ sequenceDiagram
 ```
 
 ### See Whether I Already Liked Object On Current Page
+
+```mermaid
+sequenceDiagram
+    participant Observer as Discovery Observer
+    participant Indicator as Liked Indicator
+    participant Security as Security Store
+    participant Mastodon as Mastodon Server
+
+    Observer->>Indicator: Notify current ActivityPub resource changed
+
+    alt Current ActivityPub resource exists
+        Indicator->>Security: Get current account identity
+        Security-->>Indicator: Current account identity or none
+
+        alt Current account identity exists
+            Indicator->>Security: Get access token for account identity
+            Security-->>Indicator: Access token
+            Indicator->>Mastodon: Resolve ActivityPub resource to status ID
+            Mastodon-->>Indicator: Status ID or none
+
+            alt Status ID exists
+                Indicator->>Mastodon: Get liked state for status ID
+                Mastodon-->>Indicator: Liked state
+                Indicator->>Indicator: Set liked state
+            else No status ID exists
+                Indicator->>Indicator: Clear liked state
+            end
+        else No current account identity
+            Indicator->>Indicator: Clear liked state
+        end
+    else No current ActivityPub resource
+        Indicator->>Indicator: Clear liked state
+    end
+```
 
 ### Like Object On Current Page
 
