@@ -9,12 +9,12 @@ sequenceDiagram
     participant Security as Security Store
     participant Mastodon as Mastodon Server
 
-    User->>Login: Press login button
-    Login-->>User: Show login modal with server name input
+    User->>Login: Select login menu item
+    Login-->>User: Show login dialog with server name input
 
     alt User cancels
         User->>Login: Cancel login
-        Login-->>User: Close login modal
+        Login-->>User: Close login dialog
     else User submits server name
         User->>Login: Submit server name
         Login->>Security: Get client credentials for server name
@@ -255,7 +255,7 @@ sequenceDiagram
     participant Logout as Logout Component
     participant Security as Security Store
 
-    User->>Logout: Initiate logout
+    User->>Logout: Select logout menu item
     Logout->>Security: Get current account identity
     Security-->>Logout: Current account identity
     Logout->>Security: Remove access token for account identity

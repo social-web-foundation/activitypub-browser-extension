@@ -3,14 +3,14 @@
 ```mermaid
 classDiagram
     class LoginComponent {
-        +pressLogin()
+        +selectLoginMenuItem()
         +submitServerName(serverName)
         +cancelLogin()
         +handleAuthorizationRedirect(request)
     }
 
     class LogoutComponent {
-        +initiateLogout()
+        +selectLogoutMenuItem()
     }
 
     class DiscoveryObserver {
