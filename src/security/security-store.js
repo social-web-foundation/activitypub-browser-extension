@@ -95,6 +95,6 @@ export class SecurityStore {
   }
 
   #currentAccountIdKey () {
-    return `securitystore:current:accountid`
+    return 'securitystore:current:accountid'
   }
 }
