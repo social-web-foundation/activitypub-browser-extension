@@ -47,7 +47,7 @@ classDiagram
 
     class ResourceCache {
         +getActivityPubResource(document) ActivityPubResource
-        +storeActivityPubResource(document, resource)
+        +setActivityPubResource(document, resource)
     }
 
     class BrowserAdapter {

@@ -169,7 +169,7 @@ sequenceDiagram
             Mastodon-->>Observer: Status ID or none
             Observer->>Observer: Set current status ID
 
-            Observer->>Cache: Store ActivityPub resource for document
+            Observer->>Cache: Set ActivityPub resource for document
             Note over Observer,Cache: Cache invalidation TBD
             Observer->>Observer: Set current ActivityPub resource
         else Resource is not verified
