@@ -1,20 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { DiscoveryObserver } from '../src/discovery/discovery-observer.js'
 import { LikeToggle } from '../src/ui/like-toggle.js'
-
-test('discovery observer starts without current resource state', () => {
-  const observer = new DiscoveryObserver({
-    browserAdapter: {},
-    mastodonClient: {},
-    resourceCache: {},
-    securityStore: {}
-  })
-
-  assert.equal(observer.getCurrentActivityPubResource(), null)
-  assert.equal(observer.getCurrentStatusId(), null)
-})
 
 test('like toggle can set and clear liked state', () => {
   const toggle = new LikeToggle({

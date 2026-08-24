@@ -17,8 +17,8 @@ classDiagram
         -currentActivityPubResource ActivityPubResource
         -currentStatusId StatusId
         +handleDocumentChanged(document)
-        +getCurrentActivityPubResource() ActivityPubResource
-        +getCurrentStatusId() StatusId
+        +resource ActivityPubResource
+        +statusId StatusId
         -clearCurrentActivityPubResource()
         -clearCurrentStatusId()
         -setCurrentActivityPubResource(resource)
