@@ -1,0 +1,14 @@
+{
+  "name": "activitypub-browser-extension",
+  "version": "0.0.0",
+  "description": "An extension for enabling ActivityPub interactions in the browser",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "lint": "npx standard"
+  },
+  "devDependencies": {
+    "standard": "^17.1.2"
+  }
+}

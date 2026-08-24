@@ -1,0 +1,3 @@
+globalThis.activityPubBrowserExtensionContentScript = {
+  loaded: true
+}
