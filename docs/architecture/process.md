@@ -88,7 +88,7 @@ sequenceDiagram
         StatusCache-->>Observer: Status ID or none
 
         alt Status ID is not cached
-            Observer->>Mastodon: Resolve ActivityPub resource to status ID
+            Observer->>Mastodon: Resolve ActivityPub resource to status ID with Mastodon hostname and account credentials
             Mastodon-->>Observer: Status ID or none
             Observer->>StatusCache: Set status ID for Mastodon hostname and ActivityPub resource
         end
@@ -151,7 +151,7 @@ sequenceDiagram
                 Observer->>Security: Get account credentials
                 Security-->>Observer: Account credentials
 
-                Observer->>Mastodon: Resolve ActivityPub resource with access token
+                Observer->>Mastodon: Resolve ActivityPub resource with Mastodon hostname and account credentials
                 Mastodon-->>Observer: ActivityPub object or none
 
                 alt ActivityPub object returned
@@ -177,7 +177,7 @@ sequenceDiagram
             StatusCache-->>Observer: Status ID or none
 
             alt Status ID is not cached
-                Observer->>Mastodon: Resolve ActivityPub resource to status ID
+                Observer->>Mastodon: Resolve ActivityPub resource to status ID with Mastodon hostname and account credentials
                 Mastodon-->>Observer: Status ID or none
                 Observer->>StatusCache: Set status ID for Mastodon hostname and ActivityPub resource
             end
@@ -212,7 +212,7 @@ sequenceDiagram
     alt Current status ID exists
         Toggle->>Security: Get account credentials
         Security-->>Toggle: Account credentials
-        Toggle->>Mastodon: Get liked state for current status ID
+        Toggle->>Mastodon: Get liked state with Mastodon hostname, account credentials, and current status ID
         Mastodon-->>Toggle: Liked state
         Toggle->>Toggle: Set liked state
     else No current status ID
@@ -236,7 +236,7 @@ sequenceDiagram
     Observer-->>Toggle: Current status ID
     Toggle->>Security: Get account credentials
     Security-->>Toggle: Account credentials
-    Toggle->>Mastodon: Like current status ID
+    Toggle->>Mastodon: Like current status ID with Mastodon hostname and account credentials
     Mastodon-->>Toggle: Liked state
     Toggle->>Toggle: Set liked state
 ```
@@ -257,7 +257,7 @@ sequenceDiagram
     Observer-->>Toggle: Current status ID
     Toggle->>Security: Get account credentials
     Security-->>Toggle: Account credentials
-    Toggle->>Mastodon: Undo like for current status ID
+    Toggle->>Mastodon: Undo like for current status ID with Mastodon hostname and account credentials
     Mastodon-->>Toggle: Liked state
     Toggle->>Toggle: Set liked state
 ```

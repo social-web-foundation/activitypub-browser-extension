@@ -3,8 +3,17 @@ export class DiscoveryObserver {
   #resourceCache
   #resource
   #statusId
+  #mastodonClient
+  #securityStore
+  #statusIdCache
 
-  constructor ({ browser, resourceCache }) {
+  constructor ({
+    browser,
+    resourceCache,
+    mastodonClient,
+    securityStore,
+    statusIdCache
+  }) {
     if (
       !browser ||
       typeof browser !== 'object' ||
@@ -20,8 +29,20 @@ export class DiscoveryObserver {
     if (!resourceCache || typeof resourceCache !== 'object') {
       throw new Error('resourceCache argument invalid')
     }
+    if (!mastodonClient || typeof mastodonClient !== 'object') {
+      throw new Error('mastodonClient argument invalid')
+    }
+    if (!securityStore || typeof securityStore !== 'object') {
+      throw new Error('securityStore argument invalid')
+    }
+    if (!statusIdCache || typeof statusIdCache !== 'object') {
+      throw new Error('statusIdCache argument invalid')
+    }
     this.#browser = browser
     this.#resourceCache = resourceCache
+    this.#mastodonClient = mastodonClient
+    this.#securityStore = securityStore
+    this.#statusIdCache = statusIdCache
     this.#browser.tabs.onActivated.addListener(activeInfo =>
       this.onActivated(activeInfo)
     )
@@ -49,7 +70,7 @@ export class DiscoveryObserver {
     if (!changeInfo || typeof changeInfo !== 'object') {
       throw new Error('invalid changeInfo argument')
     }
-    if (changeInfo.status == 'complete') {
+    if (changeInfo.status === 'complete') {
       this.#clearState()
       this.#getDocumentFingerprint(tabId)
         .then(result => this.#discover(result))
@@ -80,5 +101,34 @@ export class DiscoveryObserver {
     if (resource) {
       this.#resource = resource
     }
+    // TODO: other discovery here
+    if (!this.#resource) {
+      return
+    }
+    const credentials = await this.#securityStore.getAccountCredentials()
+    if (!credentials) {
+      return
+    }
+    const hostname = this.#actorIdToHostname(credentials.accountIdentity)
+    let statusId = await this.#statusIdCache.getStatusId(hostname, resource)
+    if (statusId) {
+      this.#statusId = statusId
+    } else {
+      statusId =
+        await this.#mastodonClient.resolveActivityPubResourceToStatusId(
+          hostname,
+          credentials,
+          resource
+        )
+      if (statusId) {
+        this.#statusId = statusId
+        await this.#statusIdCache.setStatusId(hostname, resource, statusId)
+      }
+    }
+  }
+
+  #actorIdToHostname (actorId) {
+    const url = new URL(actorId)
+    return url.hostname
   }
 }

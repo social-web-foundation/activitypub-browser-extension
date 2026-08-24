@@ -63,14 +63,14 @@ classDiagram
     }
 
     class MastodonClient {
-        +registerClientApplication(serverName) ClientCredentials
-        +exchangeAuthorizationCode(code) string
-        +verifyCredentials(accessToken) AccountIdentity
-        +resolveActivityPubResource(resource, credentials) ActivityPubResource
-        +resolveActivityPubResourceToStatusId(resource, credentials) StatusId
-        +getLikedState(statusId, credentials) boolean
-        +likeStatus(statusId, credentials) boolean
-        +undoLikeStatus(statusId, credentials) boolean
+        +registerClientApplication(hostname) ClientCredentials
+        +exchangeAuthorizationCode(hostname, clientCredentials, code) string
+        +verifyCredentials(hostname, accessToken) AccountIdentity
+        +resolveActivityPubResource(hostname, credentials, resource) ActivityPubResource
+        +resolveActivityPubResourceToStatusId(hostname, credentials, resource) StatusId
+        +getLikedState(hostname, credentials, statusId) boolean
+        +likeStatus(hostname, credentials, statusId) boolean
+        +undoLikeStatus(hostname, credentials, statusId) boolean
     }
 
     class AccountCredentials {
