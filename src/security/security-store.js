@@ -9,16 +9,16 @@ export class SecurityStore {
   }
 
   async getClientCredentials (hostname) {
-    if (!hostname) {
+    if (!hostname || typeof hostname !== 'string') {
       throw new Error('hostname argument not defined')
     }
-    return (
-      (await this.#storage.get(this.#clientCredentialsKey(hostname))) ?? null
-    )
+    const key = this.#clientCredentialsKey(hostname)
+    const obj = await this.#storage.get(key)
+    return obj[key] ?? null
   }
 
   async setClientCredentials (hostname, { clientId, clientSecret }) {
-    if (!hostname) {
+    if (!hostname || typeof hostname !== 'string') {
       throw new Error('hostname argument not defined')
     }
     if (!clientId) {
@@ -27,9 +27,12 @@ export class SecurityStore {
     if (!clientSecret) {
       throw new Error('clientSecret argument not defined')
     }
-    await this.#storage.set(this.#clientCredentialsKey(hostname), {
-      clientId,
-      clientSecret
+    const key = this.#clientCredentialsKey(hostname)
+    await this.#storage.set({
+      [key]: {
+        clientId,
+        clientSecret
+      }
     })
   }
 
@@ -40,18 +43,22 @@ export class SecurityStore {
     if (!accessToken || typeof accessToken !== 'string') {
       throw new Error('accessToken argument not defined')
     }
-    await this.#storage.set(this.#accessTokenKey(accountIdentity), accessToken)
+    const key = this.#accessTokenKey(accountIdentity)
+    await this.#storage.set({ [key]: accessToken })
   }
 
   async setCurrentAccountIdentity (accountIdentity) {
     if (!accountIdentity || typeof accountIdentity !== 'string') {
       throw new Error('accountIdentity argument not defined')
     }
-    await this.#storage.set(this.#currentAccountIdKey(), accountIdentity)
+    const key = this.#currentAccountIdKey()
+    await this.#storage.set({ [key]: accountIdentity })
   }
 
   async getCurrentAccountIdentity () {
-    return (await this.#storage.get(this.#currentAccountIdKey())) ?? null
+    const key = this.#currentAccountIdKey()
+    const obj = await this.#storage.get(key)
+    return obj[key] ?? null
   }
 
   async getAccountCredentials () {
@@ -59,9 +66,9 @@ export class SecurityStore {
     if (!accountIdentity) {
       return null
     }
-    const accessToken = await this.#storage.get(
-      this.#accessTokenKey(accountIdentity)
-    )
+    const key = this.#accessTokenKey(accountIdentity)
+    const obj = await this.#storage.get(key)
+    const accessToken = obj[key] ?? null
     if (!accessToken) {
       return null
     }

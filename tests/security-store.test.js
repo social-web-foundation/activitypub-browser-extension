@@ -9,11 +9,15 @@ class FakeStorage {
   }
 
   async get (key) {
-    return this.values.get(key) ?? null
+    return {
+      [key]: this.values.get(key)
+    }
   }
 
-  async set (key, value) {
-    this.values.set(key, value)
+  async set (items) {
+    for (const [key, value] of Object.entries(items)) {
+      this.values.set(key, value)
+    }
   }
 
   async remove (key) {
@@ -44,7 +48,7 @@ test('returns null when client credentials are missing', async () => {
 
 test('stores account credentials for the current account identity', async () => {
   const store = new SecurityStore({ storage: new FakeStorage() })
-  const accountIdentity = 'https://mastodon.example/users/alice'
+  const accountIdentity = 'https://mastodon.example/users/example'
   const accessToken = 'access-token'
 
   await store.setAccessToken(accountIdentity, accessToken)
@@ -65,7 +69,7 @@ test('returns null account credentials when there is no current account identity
 
 test('returns null account credentials when the current access token is missing', async () => {
   const store = new SecurityStore({ storage: new FakeStorage() })
-  const accountIdentity = 'https://mastodon.example/users/alice'
+  const accountIdentity = 'https://mastodon.example/users/example'
 
   await store.setCurrentAccountIdentity(accountIdentity)
 
@@ -74,7 +78,7 @@ test('returns null account credentials when the current access token is missing'
 
 test('removes access token and current account identity', async () => {
   const store = new SecurityStore({ storage: new FakeStorage() })
-  const accountIdentity = 'https://mastodon.example/users/alice'
+  const accountIdentity = 'https://mastodon.example/users/example'
   const accessToken = 'access-token'
 
   await store.setAccessToken(accountIdentity, accessToken)
