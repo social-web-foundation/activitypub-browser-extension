@@ -26,7 +26,6 @@ flowchart TB
         AccountCredentials[AccountCredentials]
         AccountIdentity[AccountIdentity]
         ActivityPubResource[ActivityPubResource]
-        AccessToken[AccessToken]
         ClientCredentials[ClientCredentials]
         StatusId[StatusId]
     end

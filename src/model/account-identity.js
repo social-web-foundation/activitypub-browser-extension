@@ -1,6 +1,5 @@
 export class AccountIdentity {
-  constructor ({ id, serverName }) {
+  constructor ({ id }) {
     this.id = id
-    this.serverName = serverName
   }
 }

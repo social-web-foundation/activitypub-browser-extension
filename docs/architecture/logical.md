@@ -36,8 +36,8 @@ classDiagram
 
     class SecurityStore {
         +getClientCredentials(serverName) ClientCredentials
-        +storeClientCredentials(serverName, credentials)
-        +storeAccessToken(accountIdentity, accessToken)
+        +setClientCredentials(serverName, credentials)
+        +setAccessToken(accountIdentity, accessToken)
         +setCurrentAccountIdentity(accountIdentity)
         +getCurrentAccountIdentity() AccountIdentity
         +getAccountCredentials() AccountCredentials
@@ -59,7 +59,7 @@ classDiagram
 
     class MastodonClient {
         +registerClientApplication(serverName) ClientCredentials
-        +exchangeAuthorizationCode(code) AccessToken
+        +exchangeAuthorizationCode(code) string
         +verifyCredentials(accessToken) AccountIdentity
         +resolveActivityPubResource(resource, credentials) ActivityPubResource
         +resolveActivityPubResourceToStatusId(resource, credentials) StatusId
@@ -70,7 +70,7 @@ classDiagram
 
     class AccountCredentials {
         +accountIdentity AccountIdentity
-        +accessToken AccessToken
+        +accessToken string
     }
 
     class ClientCredentials {
@@ -89,11 +89,6 @@ classDiagram
 
     class AccountIdentity {
         +id string
-        +serverName string
-    }
-
-    class AccessToken {
-        +value string
     }
 
     LoginComponent --> SecurityStore
@@ -111,7 +106,6 @@ classDiagram
     SecurityStore --> ClientCredentials
     SecurityStore --> AccountCredentials
     AccountCredentials --> AccountIdentity
-    AccountCredentials --> AccessToken
     MastodonClient --> ClientCredentials
     MastodonClient --> AccountCredentials
     MastodonClient --> ActivityPubResource

@@ -23,7 +23,7 @@ sequenceDiagram
         alt No client credentials exist
             Login->>Mastodon: Register client application
             Mastodon-->>Login: Client credentials
-            Login->>Security: Store client credentials for server name
+            Login->>Security: Set client credentials for server name
         else Client credentials exist
             Login-->>Login: Use stored client credentials
         end
@@ -53,7 +53,7 @@ sequenceDiagram
             Mastodon-->>Login: Access token
             Login->>Mastodon: Verify credentials with access token
             Mastodon-->>Login: Account identity
-            Login->>Security: Store access token for account identity
+            Login->>Security: Set access token for account identity
             Login->>Security: Set current account identity
             Login-->>User: Show logged-in state
         end
