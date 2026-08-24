@@ -50,6 +50,11 @@ classDiagram
         +setActivityPubResource(document, resource)
     }
 
+    class StatusIdCache {
+        +getStatusId(hostname, resource) StatusId
+        +setStatusId(hostname, resource, statusId)
+    }
+
     class BrowserAdapter {
         +getResponseHeaders(document)
         +getDomDocument()
@@ -96,6 +101,7 @@ classDiagram
     LogoutComponent --> SecurityStore
     DiscoveryObserver --> BrowserAdapter
     DiscoveryObserver --> ResourceCache
+    DiscoveryObserver --> StatusIdCache
     DiscoveryObserver --> SecurityStore
     DiscoveryObserver --> MastodonClient
     DiscoveryObserver --> ActivityPubResource
@@ -111,4 +117,6 @@ classDiagram
     MastodonClient --> ActivityPubResource
     MastodonClient --> StatusId
     ResourceCache --> ActivityPubResource
+    StatusIdCache --> ActivityPubResource
+    StatusIdCache --> StatusId
 ```

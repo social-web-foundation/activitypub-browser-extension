@@ -68,6 +68,7 @@ sequenceDiagram
     participant Browser
     participant Observer as Discovery Observer
     participant Cache as Resource Cache
+    participant StatusCache as Status ID Cache
     participant Document as DOM Document
     participant Security as Security Store
     participant Mastodon as Mastodon Server
@@ -83,8 +84,15 @@ sequenceDiagram
     alt Resource is cached
         Observer->>Security: Get account credentials
         Security-->>Observer: Account credentials
-        Observer->>Mastodon: Resolve ActivityPub resource to status ID
-        Mastodon-->>Observer: Status ID or none
+        Observer->>StatusCache: Get status ID for Mastodon hostname and ActivityPub resource
+        StatusCache-->>Observer: Status ID or none
+
+        alt Status ID is not cached
+            Observer->>Mastodon: Resolve ActivityPub resource to status ID
+            Mastodon-->>Observer: Status ID or none
+            Observer->>StatusCache: Set status ID for Mastodon hostname and ActivityPub resource
+        end
+
         Observer->>Observer: Set current status ID
 
         Observer->>Observer: Set current ActivityPub resource
@@ -165,8 +173,15 @@ sequenceDiagram
             Observer->>Security: Get account credentials
             Security-->>Observer: Account credentials
 
-            Observer->>Mastodon: Resolve ActivityPub resource to status ID
-            Mastodon-->>Observer: Status ID or none
+            Observer->>StatusCache: Get status ID for Mastodon hostname and ActivityPub resource
+            StatusCache-->>Observer: Status ID or none
+
+            alt Status ID is not cached
+                Observer->>Mastodon: Resolve ActivityPub resource to status ID
+                Mastodon-->>Observer: Status ID or none
+                Observer->>StatusCache: Set status ID for Mastodon hostname and ActivityPub resource
+            end
+
             Observer->>Observer: Set current status ID
 
             Observer->>Cache: Set ActivityPub resource for document

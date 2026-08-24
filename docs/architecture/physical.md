@@ -29,6 +29,7 @@ flowchart TB
 
             subgraph storage[Extension storage]
                 SecurityStore[(SecurityStore)]
+                StatusIdCache[(StatusIdCache)]
             end
         end
 
@@ -61,6 +62,7 @@ flowchart TB
     LikeToggle --> MastodonClient
     DiscoveryObserver --> BrowserAdapter
     DiscoveryObserver --> ResourceCache
+    DiscoveryObserver --> StatusIdCache
     DiscoveryObserver --> SecurityStore
     DiscoveryObserver --> MastodonClient
     BrowserAdapter --> dom

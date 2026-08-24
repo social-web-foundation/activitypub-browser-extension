@@ -12,6 +12,7 @@ flowchart TB
         BrowserAdapter[BrowserAdapter]
         DiscoveryObserver[DiscoveryObserver]
         ResourceCache[ResourceCache]
+        StatusIdCache[StatusIdCache]
     end
 
     subgraph mastodon[mastodon]
