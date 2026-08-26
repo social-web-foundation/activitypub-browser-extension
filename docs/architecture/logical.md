@@ -16,6 +16,8 @@ classDiagram
     class DiscoveryObserver {
         -currentActivityPubResource ActivityPubResource
         -currentStatusId StatusId
+        +addEventListener(type, listener)
+        +dispatchEvent(event)
         +handleDocumentChanged(document)
         +resource ActivityPubResource
         +statusId StatusId

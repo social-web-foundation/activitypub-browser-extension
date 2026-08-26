@@ -1,4 +1,4 @@
-export class DiscoveryObserver {
+export class DiscoveryObserver extends EventTarget {
   #browser
   #resourceCache
   #resource
@@ -14,6 +14,7 @@ export class DiscoveryObserver {
     securityStore,
     statusIdCache
   }) {
+    super()
     if (
       !browser ||
       typeof browser !== 'object' ||
@@ -79,8 +80,8 @@ export class DiscoveryObserver {
   }
 
   #clearState () {
-    this.#resource = null
-    this.#statusId = null
+    this.#setResource(null)
+    this.#setStatusId(null)
   }
 
   async #getDocumentFingerprint (tabId) {
@@ -95,25 +96,51 @@ export class DiscoveryObserver {
   }
 
   async #discover (fingerprint) {
-    const resource = await this.#resourceCache.getActivityPubResource(
-      fingerprint
-    )
-    if (resource) {
-      this.#resource = resource
-    }
-    // TODO: other discovery here
-    if (!this.#resource) {
+    const resource = await this.#discoverResource(fingerprint)
+    if (!resource) {
       return
     }
+
+    this.#setResource(resource)
+
     const credentials = await this.#securityStore.getAccountCredentials()
     if (!credentials) {
       return
     }
+
     const hostname = this.#actorIdToHostname(credentials.accountIdentity)
+    if (!hostname) {
+      return
+    }
+
+    const statusId = await this.#discoverStatusId(
+      hostname,
+      resource,
+      credentials
+    )
+    if (!statusId) {
+      return
+    }
+
+    this.#setStatusId(statusId)
+  }
+
+  #actorIdToHostname (actorId) {
+    const url = new URL(actorId)
+    return url.hostname
+  }
+
+  async #discoverResource (fingerprint) {
+    const resource = await this.#resourceCache.getActivityPubResource(
+      fingerprint
+    )
+    // TODO: other discovery here
+    return resource
+  }
+
+  async #discoverStatusId (hostname, resource, credentials) {
     let statusId = await this.#statusIdCache.getStatusId(hostname, resource)
-    if (statusId) {
-      this.#statusId = statusId
-    } else {
+    if (!statusId) {
       statusId =
         await this.#mastodonClient.resolveActivityPubResourceToStatusId(
           hostname,
@@ -121,14 +148,27 @@ export class DiscoveryObserver {
           resource
         )
       if (statusId) {
-        this.#statusId = statusId
         await this.#statusIdCache.setStatusId(hostname, resource, statusId)
       }
     }
+    return statusId
   }
 
-  #actorIdToHostname (actorId) {
-    const url = new URL(actorId)
-    return url.hostname
+  #setResource (resource) {
+    this.#resource = resource
+    this.dispatchEvent(
+      new CustomEvent('resourcechanged', {
+        detail: { resource }
+      })
+    )
+  }
+
+  #setStatusId (statusId) {
+    this.#statusId = statusId
+    this.dispatchEvent(
+      new CustomEvent('statusidchanged', {
+        detail: { statusId }
+      })
+    )
   }
 }

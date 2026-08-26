@@ -77,7 +77,9 @@ sequenceDiagram
     User->>Browser: Change current tab document or location
     Browser->>Observer: Notify document or location changed
     Observer->>Observer: Clear current ActivityPub resource
+    Observer-->>Observer: Emit resource changed
     Observer->>Observer: Clear current status ID
+    Observer-->>Observer: Emit status ID changed
     Observer->>Cache: Get ActivityPub resource for document
     Cache-->>Observer: ActivityPub resource or none
 
@@ -94,8 +96,10 @@ sequenceDiagram
         end
 
         Observer->>Observer: Set current status ID
+        Observer-->>Observer: Emit status ID changed
 
         Observer->>Observer: Set current ActivityPub resource
+        Observer-->>Observer: Emit resource changed
     else Resource is not cached
         Observer->>Browser: Get response headers
         Browser-->>Observer: Response headers
@@ -183,13 +187,17 @@ sequenceDiagram
             end
 
             Observer->>Observer: Set current status ID
+            Observer-->>Observer: Emit status ID changed
 
             Observer->>Cache: Set ActivityPub resource for document
             Note over Observer,Cache: Cache invalidation TBD
             Observer->>Observer: Set current ActivityPub resource
+            Observer-->>Observer: Emit resource changed
         else Resource is not verified
             Observer->>Observer: Clear current ActivityPub resource
+            Observer-->>Observer: Emit resource changed
             Observer->>Observer: Clear current status ID
+            Observer-->>Observer: Emit status ID changed
         end
     end
 ```

@@ -38,15 +38,12 @@ class FakeResourceCache {
   constructor ({ resources = new Map() } = {}) {
     this.resources = resources
     this.requests = []
-    this.requested = new Promise(resolve => {
-      this.resolveRequested = resolve
-    })
   }
 
   async getActivityPubResource (documentFingerprint) {
     this.requests.push(documentFingerprint)
-    this.resolveRequested(documentFingerprint)
-    return this.resources.get(this.#key(documentFingerprint)) ?? null
+    const resource = this.resources.get(this.#key(documentFingerprint)) ?? null
+    return resource
   }
 
   #key ({ url, hash }) {
@@ -92,24 +89,16 @@ class FakeStatusIdCache {
     this.statusIds = statusIds
     this.getRequests = []
     this.setRequests = []
-    this.requested = new Promise(resolve => {
-      this.resolveRequested = resolve
-    })
   }
 
   async getStatusId (hostname, resource) {
     this.getRequests.push({ hostname, resource })
-    const statusId = this.statusIds.get(this.#key(hostname, resource)) ?? null
-    if (statusId) {
-      this.resolveRequested(statusId)
-    }
-    return statusId
+    return this.statusIds.get(this.#key(hostname, resource)) ?? null
   }
 
   async setStatusId (hostname, resource, statusId) {
     this.setRequests.push({ hostname, resource, statusId })
     this.statusIds.set(this.#key(hostname, resource), statusId)
-    this.resolveRequested(statusId)
   }
 
   #key (hostname, resource) {
@@ -133,12 +122,22 @@ function createObserver ({
   })
 }
 
-async function waitForStatusIdCacheRequest (statusIdCache) {
+async function waitForEvent (target, type, predicate = () => true) {
+  if (!target || typeof target.addEventListener !== 'function') {
+    throw new Error('event target is not available')
+  }
+
   return Promise.race([
-    statusIdCache.requested,
+    new Promise(resolve => {
+      target.addEventListener(type, event => {
+        if (predicate(event)) {
+          resolve(event)
+        }
+      })
+    }),
     new Promise((resolve, reject) => {
       setTimeout(
-        () => reject(new Error('status ID cache was not requested')),
+        () => reject(new Error(`${type} event was not emitted`)),
         100
       )
     })
@@ -186,10 +185,14 @@ test('uses cached resource when active tab changes', async () => {
     messageResponses: new Map([[1, documentFingerprint]])
   })
   const observer = createObserver({ browser, resourceCache })
+  const resourceChanged = waitForEvent(
+    observer,
+    'resourcechanged',
+    event => event.detail.resource === resource
+  )
 
   browser.tabs.onActivated.emit({ tabId: 1 })
-  await resourceCache.requested
-  await Promise.resolve()
+  const event = await resourceChanged
 
   assert.deepEqual(browser.sentMessages, [
     {
@@ -199,6 +202,7 @@ test('uses cached resource when active tab changes', async () => {
       }
     }
   ])
+  assert.deepEqual(event.detail, { resource })
   assert.deepEqual(observer.resource, resource)
   assert.deepEqual(resourceCache.requests, [documentFingerprint])
 })
@@ -221,6 +225,11 @@ test('uses cached resource when a new document is loaded in the tab', async () =
     messageResponses: new Map([[1, documentFingerprint]])
   })
   const observer = createObserver({ browser, resourceCache })
+  const resourceChanged = waitForEvent(
+    observer,
+    'resourcechanged',
+    event => event.detail.resource === resource
+  )
 
   browser.tabs.onUpdated.emit(
     1,
@@ -232,8 +241,7 @@ test('uses cached resource when a new document is loaded in the tab', async () =
       id: 1
     }
   )
-  await resourceCache.requested
-  await Promise.resolve()
+  const event = await resourceChanged
 
   assert.deepEqual(browser.sentMessages, [
     {
@@ -243,6 +251,7 @@ test('uses cached resource when a new document is loaded in the tab', async () =
       }
     }
   ])
+  assert.deepEqual(event.detail, { resource })
   assert.deepEqual(observer.resource, resource)
   assert.deepEqual(resourceCache.requests, [documentFingerprint])
 })
@@ -274,10 +283,14 @@ test('uses cached status ID for cached resource', async () => {
     resourceCache,
     statusIdCache
   })
+  const statusIdChanged = waitForEvent(
+    observer,
+    'statusidchanged',
+    event => event.detail.statusId === '123'
+  )
 
   browser.tabs.onActivated.emit({ tabId: 1 })
-  await waitForStatusIdCacheRequest(statusIdCache)
-  await Promise.resolve()
+  const event = await statusIdChanged
 
   assert.deepEqual(statusIdCache.getRequests, [
     {
@@ -286,6 +299,7 @@ test('uses cached status ID for cached resource', async () => {
     }
   ])
   assert.deepEqual(mastodonClient.requests, [])
+  assert.deepEqual(event.detail, { statusId: '123' })
   assert.equal(observer.statusId, '123')
 })
 
@@ -320,10 +334,14 @@ test('resolves status ID for cached resource when status ID is not cached', asyn
     securityStore,
     statusIdCache
   })
+  const statusIdChanged = waitForEvent(
+    observer,
+    'statusidchanged',
+    event => event.detail.statusId === '123'
+  )
 
   browser.tabs.onActivated.emit({ tabId: 1 })
-  await waitForStatusIdCacheRequest(statusIdCache)
-  await Promise.resolve()
+  const event = await statusIdChanged
 
   assert.deepEqual(securityStore.requests, [{}])
   assert.deepEqual(mastodonClient.requests, [
@@ -340,5 +358,6 @@ test('resolves status ID for cached resource when status ID is not cached', asyn
       statusId: '123'
     }
   ])
+  assert.deepEqual(event.detail, { statusId: '123' })
   assert.equal(observer.statusId, '123')
 })
