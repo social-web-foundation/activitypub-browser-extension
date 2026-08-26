@@ -131,11 +131,50 @@ export class DiscoveryObserver extends EventTarget {
   }
 
   async #discoverResource (fingerprint) {
-    const resource = await this.#resourceCache.getActivityPubResource(
-      fingerprint
-    )
-    // TODO: other discovery here
+    let resource = await this.#resourceCache.getActivityPubResource(fingerprint)
+    if (!resource) {
+      resource = await this.#discoverResourceByHeaders(fingerprint)
+    }
+    if (!resource) {
+      resource = await this.#discoverResourceByLinkElement(fingerprint)
+    }
+    if (!resource) {
+      resource = await this.#discoverResourceByAElement(fingerprint)
+    }
+    if (!resource) {
+      resource = await this.#discoverResourceByEmbeddedJSONLD(fingerprint)
+    }
+    if (!resource) {
+      resource = await this.#discoverResourceByContentNegotiation(fingerprint)
+    }
+    if (!resource) {
+      resource = await this.#discoverResourceByWebfinger(fingerprint)
+    }
     return resource
+  }
+
+  async #discoverResourceByHeaders (fingerprint) {
+    return null
+  }
+
+  async #discoverResourceByLinkElement (fingerprint) {
+    return null
+  }
+
+  async #discoverResourceByAElement (fingerprint) {
+    return null
+  }
+
+  async #discoverResourceByEmbeddedJSONLD (fingerprint) {
+    return null
+  }
+
+  async #discoverResourceByContentNegotiation (fingerprint) {
+    return null
+  }
+
+  async #discoverResourceByWebfinger (fingerprint) {
+    return null
   }
 
   async #discoverStatusId (hostname, resource, credentials) {
